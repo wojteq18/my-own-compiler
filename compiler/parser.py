@@ -1,31 +1,56 @@
 import ply.yacc as yacc
 from lexer import tokens
 
-def p_statement_expr(p):
-    'statement : expression'
-    p[0] = p[1]
+free_memory_address = 0
+symbols_table = {}
 
-def p_statement_empty(p):
-    'statement : '
-    p[0] = None
+def get_addr(variable_name): #Przyporządkowuje unikalny adres w pamięci dla zmiennej
+    global free_memory_address
+    if variable_name not in symbols_table:
+        symbols_table[variable_name] = free_memory_address
+        free_memory_address += 1
+    return symbols_table[variable_name]
 
-def p_expression_plus(p):
-    'expression : expression PLUS term'
-    p[0] = p[1] + p[3]
+def p_program(p):
+    'program : PROGRAM IS declarations IN commands END'
+    final_code = p[5] + "HALT"
+    p[0] = final_code
+    print("Generated Code:")
+    print(final_code)
 
-def p_expression_minus(p):
-    'expression : expression MINUS term'
-    p[0] = p[1] - p[3]
+def p_commands_multiple(p):
+    'commands : commands command'
+    p[0] = p[1] + p[2]
 
-def p_expression_term(p):
-    'expression : term'
-    p[0] = p[1]
+def p_commands_single(p):
+    'commands : command'
+    p[0] = p[1]   
 
-def p_term_number(p):
-    'term : NUMBER'
-    p[0] = p[1]    
+def p_commandd_read(p):
+    'command : READ ID SEMICOLON'
+    variable_name = p[2]
+    addr = get_addr(variable_name)
+    p[0] = f"READ\nSTORE {addr}\n"
+
+def p_commands_write(p):
+    'command : WRITE ID SEMICOLON'
+    variable_anme = p[2]
+    if variable_anme not in symbols_table:
+        print(f"Error: Variable '{variable_anme}' not declared.")
+        p[0] = ""
+        return
+    else:
+        addr = symbols_table[variable_anme]
+    p[0] = f"LOAD {addr}\nWRITE\n"
+
+
+def p_variable_declaration(p):
+    'declarations : ID'
+    var_name = p[1]
+    addr = get_addr(var_name)
+    print(f"Zmienna {p[1]} zarejestrowana pod adresem {addr}") 
 
 def p_error(p):
-    print("Error in syntax!")        
-
+    print("Error in syntax!")   
+             
 parser = yacc.yacc()

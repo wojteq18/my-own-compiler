@@ -6,3 +6,4 @@ parsetab.py
 lextab.py
 /compiler/parser.out
 /compiler/parsetab.py
+/compiler/test.txt

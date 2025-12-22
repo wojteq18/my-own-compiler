@@ -1,14 +1,35 @@
 import ply.lex as lex
 
 tokens = (
-    'NUMBER',
-    'PLUS',
-    'MINUS',
+    'PROGRAM',
+    'IS',
+    'IN',
+    'READ',
+    'END',
+    'ID',
+    'SEMICOLON',
+    'WRITE',
 )
 
-t_PLUS   = r'\+'
-t_MINUS  = r'\-'
+reserved = {
+    'PROGRAM': 'PROGRAM',
+    'IS': 'IS',
+    'IN': 'IN',
+    'READ': 'READ',
+    'END': 'END',
+    'WRITE': 'WRITE',
+}
+
 t_ignore = ' \t'
+
+def t_ID(t):
+    r'[a-zA-Z_][a-zA-Z0-9_]*'
+    t.type = reserved.get(t.value.upper(), 'ID')  # Sprawdź czy to słowo kluczowe
+    return t
+
+def t_SEMICOLON(t):
+    r';'
+    return t
 
 def t_COMMENT(t):
     r'\#.*'
