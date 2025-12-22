@@ -4,3 +4,5 @@ __pycache__/
 parser.out
 parsetab.py
 lextab.py
+/compiler/parser.out
+/compiler/parsetab.py
