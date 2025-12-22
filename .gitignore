@@ -1,0 +1,6 @@
+/mw2025-1
+__pycache__/
+*.pyc
+parser.out
+parsetab.py
+lextab.py
