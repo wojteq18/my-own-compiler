@@ -1,16 +1,7 @@
 import ply.yacc as yacc
 from lexer import tokens
+from compiler_utils import get_addr, symbols_table, free_memory_address, generate_number
 import sys
-
-free_memory_address = 0
-symbols_table = {}
-
-def get_addr(variable_name): #Przyporządkowuje unikalny adres w pamięci dla zmiennej
-    global free_memory_address
-    if variable_name not in symbols_table:
-        symbols_table[variable_name] = free_memory_address
-        free_memory_address += 1
-    return symbols_table[variable_name]
 
 def p_program(p):
     'program : PROGRAM IS declarations IN commands END'
@@ -55,6 +46,20 @@ def p_variable_declaration_single(p):
     var_name = p[1]
     addr = get_addr(var_name)
     print(f"Zmienna {p[1]} zarejestrowana pod adresem {addr}") 
+
+def p_assign_command(p):
+    'command : ID ASSIGN NUMBER SEMICOLON'
+    variable_name = p[1]
+    number_value = p[3]
+    if variable_name not in symbols_table:
+        sys.exit(f"Error: Variable '{variable_name}' not declared in line {p.lineno(1)}")
+        p[0] = ""
+        return
+    else:
+        addr = symbols_table[variable_name]
+    code = generate_number(number_value)    
+    p[0] = code + f"STORE {addr}\n"    
+
 
 def p_variable_declaration_multiple(p):
     'declarations : declarations COMMA ID'
