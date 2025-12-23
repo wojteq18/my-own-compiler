@@ -48,17 +48,30 @@ def p_variable_declaration_single(p):
     print(f"Zmienna {p[1]} zarejestrowana pod adresem {addr}") 
 
 def p_assign_command(p):
-    'command : ID ASSIGN NUMBER SEMICOLON'
+    'command : ID ASSIGN expression SEMICOLON'
     variable_name = p[1]
-    number_value = p[3]
     if variable_name not in symbols_table:
         sys.exit(f"Error: Variable '{variable_name}' not declared in line {p.lineno(1)}")
         p[0] = ""
         return
     else:
         addr = symbols_table[variable_name]
-    code = generate_number(number_value)    
-    p[0] = code + f"STORE {addr}\n"    
+    p[0] = f"{p[3]}STORE {addr}\n"  
+
+def p_expression_number(p):
+    'expression : NUMBER'
+    p[0] = generate_number(p[1])  # Zwraca wartość liczbową    
+
+def p_expression_variable(p):
+    'expression : ID'
+    variable_name = p[1]
+    if variable_name not in symbols_table:
+        sys.exit(f"Error: Variable '{variable_name}' not declared in line {p.lineno(1)}")
+        p[0] = ""
+        return
+    else:
+        addr = symbols_table[variable_name]
+    p[0] = f"LOAD {addr}\n"  # Ładuje wartość zmiennej na stos    
 
 
 def p_variable_declaration_multiple(p):
@@ -68,6 +81,6 @@ def p_variable_declaration_multiple(p):
     print(f"Zmienna {p[3]} zarejestrowana pod adresem {addr}")    
 
 def p_error(p):
-    print("Error in syntax!")   
+    print(f"Error in syntax in line {p.lineno}")   
              
 parser = yacc.yacc()
