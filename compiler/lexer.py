@@ -1,4 +1,5 @@
 import ply.lex as lex
+import sys
 
 tokens = (
     'PROGRAM',
@@ -10,6 +11,10 @@ tokens = (
     'SEMICOLON',
     'WRITE',
     'COMMA',
+    'NUMBER',
+    'DIVIDE',
+    'MULTIPLY',
+    'ASSIGN',
 )
 
 reserved = {
@@ -32,6 +37,18 @@ def t_SEMICOLON(t):
     r';'
     return t
 
+def t_MULTIPLY(t):
+    r'\*'
+    return t
+
+def t_ASSIGN(t):
+    r':='
+    return t
+
+def t_DIVIDE(t):
+    r'/'
+    return t
+
 def t_COMMA(t):
     r','
     return t
@@ -50,7 +67,7 @@ def t_NUMBER(t):
     return t 
 
 def t_error(t):
-    print(f"Illegal character '{t.value[0]}' at line {t.lineno}")
+    sys.exit(f"Illegal character '{t.value[0]}' at line {t.lineno}")
     t.lexer.skip(1)   
 
 lexer = lex.lex()
