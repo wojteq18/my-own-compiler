@@ -9,6 +9,7 @@ tokens = (
     'ID',
     'SEMICOLON',
     'WRITE',
+    'COMMA',
 )
 
 reserved = {
@@ -29,6 +30,10 @@ def t_ID(t):
 
 def t_SEMICOLON(t):
     r';'
+    return t
+
+def t_COMMA(t):
+    r','
     return t
 
 def t_COMMENT(t):

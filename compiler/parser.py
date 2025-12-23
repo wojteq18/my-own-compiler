@@ -1,5 +1,6 @@
 import ply.yacc as yacc
 from lexer import tokens
+import sys
 
 free_memory_address = 0
 symbols_table = {}
@@ -29,14 +30,19 @@ def p_commands_single(p):
 def p_commandd_read(p):
     'command : READ ID SEMICOLON'
     variable_name = p[2]
-    addr = get_addr(variable_name)
+    if variable_name not in symbols_table:
+        sys.exit(f"Error: Variable '{variable_name}' not declared in line {p.lineno(2)}")
+        p[0] = ""
+        return
+    else:
+        addr = symbols_table[variable_name]
     p[0] = f"READ\nSTORE {addr}\n"
 
 def p_commands_write(p):
     'command : WRITE ID SEMICOLON'
     variable_anme = p[2]
     if variable_anme not in symbols_table:
-        print(f"Error: Variable '{variable_anme}' not declared.")
+        sys.exit(f"Error: Variable '{variable_anme}' not declared in line {p.lineno(2)}")
         p[0] = ""
         return
     else:
@@ -44,11 +50,17 @@ def p_commands_write(p):
     p[0] = f"LOAD {addr}\nWRITE\n"
 
 
-def p_variable_declaration(p):
+def p_variable_declaration_single(p):
     'declarations : ID'
     var_name = p[1]
     addr = get_addr(var_name)
     print(f"Zmienna {p[1]} zarejestrowana pod adresem {addr}") 
+
+def p_variable_declaration_multiple(p):
+    'declarations : declarations COMMA ID'
+    var_name = p[3]
+    addr = get_addr(var_name)
+    print(f"Zmienna {p[3]} zarejestrowana pod adresem {addr}")    
 
 def p_error(p):
     print("Error in syntax!")   
