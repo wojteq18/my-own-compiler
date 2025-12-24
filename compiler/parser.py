@@ -2,6 +2,11 @@ import ply.yacc as yacc
 from lexer import tokens
 from compiler_utils import get_addr, symbols_table, free_memory_address, generate_number
 import sys
+from register_manager import RegisterManager, reg_manager
+
+precedence = (
+    ('left', 'ADD'),
+)
 
 def p_program(p):
     'program : PROGRAM IS declarations IN commands END'
@@ -60,7 +65,7 @@ def p_assign_command(p):
 
 def p_expression_number(p):
     'expression : NUMBER'
-    p[0] = generate_number(p[1])  # Zwraca wartość liczbową    
+    p[0] = generate_number(p[1])  
 
 def p_expression_variable(p):
     'expression : ID'
@@ -78,7 +83,18 @@ def p_variable_declaration_multiple(p):
     'declarations : declarations COMMA ID'
     var_name = p[3]
     addr = get_addr(var_name)
-    print(f"Zmienna {p[3]} zarejestrowana pod adresem {addr}")    
+    print(f"Zmienna {p[3]} zarejestrowana pod adresem {addr}") 
+
+def p_expression_addition(p):
+    'expression : expression ADD expression'
+    register = reg_manager.get_register()
+
+    code = p[1]
+    code += f"SWP {register}\n"       
+    code += p[3]
+    code += f"ADD {register}\n"
+    reg_manager.release_register()
+    p[0] = code
 
 def p_error(p):
     print(f"Error in syntax in line {p.lineno}")   
