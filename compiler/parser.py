@@ -1,16 +1,12 @@
 import ply.yacc as yacc
 from lexer import tokens
+from compiler_utils import get_addr, symbols_table, free_memory_address, generate_number
 import sys
+from register_manager import RegisterManager, reg_manager
 
-free_memory_address = 0
-symbols_table = {}
-
-def get_addr(variable_name): #Przyporządkowuje unikalny adres w pamięci dla zmiennej
-    global free_memory_address
-    if variable_name not in symbols_table:
-        symbols_table[variable_name] = free_memory_address
-        free_memory_address += 1
-    return symbols_table[variable_name]
+precedence = (
+    ('left', 'ADD'),
+)
 
 def p_program(p):
     'program : PROGRAM IS declarations IN commands END'
@@ -56,13 +52,51 @@ def p_variable_declaration_single(p):
     addr = get_addr(var_name)
     print(f"Zmienna {p[1]} zarejestrowana pod adresem {addr}") 
 
+def p_assign_command(p):
+    'command : ID ASSIGN expression SEMICOLON'
+    variable_name = p[1]
+    if variable_name not in symbols_table:
+        sys.exit(f"Error: Variable '{variable_name}' not declared in line {p.lineno(1)}")
+        p[0] = ""
+        return
+    else:
+        addr = symbols_table[variable_name]
+    p[0] = f"{p[3]}STORE {addr}\n"  
+
+def p_expression_number(p):
+    'expression : NUMBER'
+    p[0] = generate_number(p[1])  
+
+def p_expression_variable(p):
+    'expression : ID'
+    variable_name = p[1]
+    if variable_name not in symbols_table:
+        sys.exit(f"Error: Variable '{variable_name}' not declared in line {p.lineno(1)}")
+        p[0] = ""
+        return
+    else:
+        addr = symbols_table[variable_name]
+    p[0] = f"LOAD {addr}\n"  # Ładuje wartość zmiennej na stos    
+
+
 def p_variable_declaration_multiple(p):
     'declarations : declarations COMMA ID'
     var_name = p[3]
     addr = get_addr(var_name)
-    print(f"Zmienna {p[3]} zarejestrowana pod adresem {addr}")    
+    print(f"Zmienna {p[3]} zarejestrowana pod adresem {addr}") 
+
+def p_expression_addition(p):
+    'expression : expression ADD expression'
+    register = reg_manager.get_register()
+
+    code = p[1]
+    code += f"SWP {register}\n"       
+    code += p[3]
+    code += f"ADD {register}\n"
+    reg_manager.release_register()
+    p[0] = code
 
 def p_error(p):
-    print("Error in syntax!")   
+    print(f"Error in syntax in line {p.lineno}")   
              
 parser = yacc.yacc()

@@ -15,6 +15,7 @@ tokens = (
     'DIVIDE',
     'MULTIPLY',
     'ASSIGN',
+    'ADD',
 )
 
 reserved = {
@@ -65,6 +66,10 @@ def t_NUMBER(t):
     r'\d+'
     t.value = int(t.value)
     return t 
+
+def t_ADD(t):
+    r'\+'
+    return t
 
 def t_error(t):
     sys.exit(f"Illegal character '{t.value[0]}' at line {t.lineno}")
