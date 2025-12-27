@@ -5,7 +5,7 @@ import sys
 from register_manager import RegisterManager, reg_manager
 
 precedence = (
-    ('left', 'ADD'),
+    ('left', 'ADD', 'MINUS'),
 )
 
 def p_program(p):
@@ -93,8 +93,22 @@ def p_expression_addition(p):
     code += f"SWP {register}\n"       
     code += p[3]
     code += f"ADD {register}\n"
-    reg_manager.release_register()
     p[0] = code
+
+def p_expression_minus(p):
+    'expression : expression MINUS expression'
+    register = reg_manager.get_register()
+
+    code = p[1]
+    code += f"SWP {register}\n"       
+    code += p[3]
+    code += f"SWP {register}\n"
+    code += f"SUB {register}\n"
+    p[0] = code    
+
+def p_expression_group(p):
+    'expression : LPAREN expression RPAREN'
+    p[0] = p[2]
 
 def p_error(p):
     print(f"Error in syntax in line {p.lineno}")   
