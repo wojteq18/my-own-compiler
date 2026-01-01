@@ -16,6 +16,9 @@ tokens = (
     'MULTIPLY',
     'ASSIGN',
     'ADD',
+    'MINUS',
+    'LPAREN',
+    'RPAREN',
 )
 
 reserved = {
@@ -50,6 +53,10 @@ def t_DIVIDE(t):
     r'/'
     return t
 
+def t_MINUS(t):
+    r'-'
+    return t
+
 def t_COMMA(t):
     r','
     return t
@@ -69,6 +76,14 @@ def t_NUMBER(t):
 
 def t_ADD(t):
     r'\+'
+    return t
+
+def t_LPAREN(t):
+    r'\('
+    return t
+
+def t_RPAREN(t):
+    r'\)'
     return t
 
 def t_error(t):

@@ -2,10 +2,11 @@ import ply.yacc as yacc
 from lexer import tokens
 from compiler_utils import get_addr, symbols_table, free_memory_address, generate_number
 import sys
-from register_manager import RegisterManager, reg_manager
+from register_manager import reg_manager
+from abstract_syntax_tree import NumberNode, BinaryOperationNode, VariableNode
 
 precedence = (
-    ('left', 'ADD'),
+    ('left', 'ADD', 'MINUS'),
 )
 
 def p_program(p):
@@ -61,22 +62,19 @@ def p_assign_command(p):
         return
     else:
         addr = symbols_table[variable_name]
-    p[0] = f"{p[3]}STORE {addr}\n"  
+
+    expression_tree = p[3] 
+    expression_code = expression_tree.generate()
+    p[0] = f"{expression_code}STORE {addr}\n"
+
 
 def p_expression_number(p):
     'expression : NUMBER'
-    p[0] = generate_number(p[1])  
+    p[0] = NumberNode(p[1]) 
 
 def p_expression_variable(p):
     'expression : ID'
-    variable_name = p[1]
-    if variable_name not in symbols_table:
-        sys.exit(f"Error: Variable '{variable_name}' not declared in line {p.lineno(1)}")
-        p[0] = ""
-        return
-    else:
-        addr = symbols_table[variable_name]
-    p[0] = f"LOAD {addr}\n"  # Ładuje wartość zmiennej na stos    
+    p[0] = VariableNode(p[1])   
 
 
 def p_variable_declaration_multiple(p):
@@ -87,14 +85,16 @@ def p_variable_declaration_multiple(p):
 
 def p_expression_addition(p):
     'expression : expression ADD expression'
-    register = reg_manager.get_register()
+    p[0] = BinaryOperationNode(p[1], 'ADD', p[3])
 
-    code = p[1]
-    code += f"SWP {register}\n"       
-    code += p[3]
-    code += f"ADD {register}\n"
-    reg_manager.release_register()
-    p[0] = code
+def p_expression_minus(p):
+    'expression : expression MINUS expression'
+    p[0] = BinaryOperationNode(p[1], 'MINUS', p[3])
+   
+
+def p_expression_group(p):
+    'expression : LPAREN expression RPAREN'
+    p[0] = p[2]
 
 def p_error(p):
     print(f"Error in syntax in line {p.lineno}")   
