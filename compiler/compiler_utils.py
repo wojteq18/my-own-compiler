@@ -25,17 +25,53 @@ def generate_number(number_value):
             code += f"SHL a\n"  # Przesuń w lewo (mnożenie przez 2)
             if bit == '1':
                 code += f"INC a\n"  # Dodaj jeden, jeśli bit to 1
-    #code += f"SWP a\n"
-    return code     
+    return code   
+  
+def gen_multiply(buffer, reg_m1):
+    reg_m2 = reg_manager.get_register()   
+    reg_res = reg_manager.get_register()  
+    reg_temp = reg_manager.get_register() 
 
-#def generate_multiplication(self, reg_b):
-    reg_c = reg_manager.get_register()
-    reg_res = reg_manager.get_register()
-    reg_temp = reg_manager.get_register()
+    l_start = buffer.get_new_label()
+    l_add = buffer.get_new_label()
+    l_end = buffer.get_new_label()
 
-    code = f"SWP {reg_c}\n"
-    code += f"RST {reg_res}\n"  # Wynik w rejestrze res
+    buffer.add_instr(f"SWP {reg_m2}")     
+    buffer.add_instr(f"RST {reg_res}")   
 
-    code += f"RST {reg_temp}\n"
-    code += f"INC {reg_temp}\n"  # Ustaw
+    buffer.set_label(l_start)
+    buffer.add_instr("RST a")
+    buffer.add_instr(f"ADD {reg_m2}")
+    buffer.add_instr(f"JZERO LABEL_{l_end}") 
+
+    buffer.add_instr("RST a")
+    buffer.add_instr(f"ADD {reg_m2}")
+    buffer.add_instr("SHR a")
+    buffer.add_instr("SHL a")
+    
+    buffer.add_instr(f"RST {reg_temp}") 
+    buffer.add_instr(f"SWP {reg_temp}") 
+    
+    buffer.add_instr(f"ADD {reg_m2}")
+    buffer.add_instr(f"SUB {reg_temp}") 
+    
+    buffer.add_instr(f"JZERO LABEL_{l_add}") 
+
+    buffer.add_instr("RST a")
+    buffer.add_instr(f"ADD {reg_res}")
+    buffer.add_instr(f"ADD {reg_m1}")
+    buffer.add_instr(f"SWP {reg_res}")
+
+    buffer.set_label(l_add)
+    buffer.add_instr(f"SHL {reg_m1}")     
+    buffer.add_instr(f"SHR {reg_m2}")    
+    buffer.add_instr(f"JUMP LABEL_{l_start}") 
+
+    buffer.set_label(l_end)
+    buffer.add_instr("RST a")
+    buffer.add_instr(f"ADD {reg_res}")    
+
+    reg_manager.release_register()
+    reg_manager.release_register()
+    reg_manager.release_register()
 

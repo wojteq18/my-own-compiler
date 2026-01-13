@@ -83,6 +83,10 @@ def p_expression_addition(p):
 def p_expression_minus(p):
     'expression : expression MINUS expression'
     p[0] = BinaryOperationNode(p[1], 'MINUS', p[3])
+
+def p_expression_multiply(p):
+    'expression : expression MULTIPLY expression'
+    p[0] = BinaryOperationNode(p[1], 'MULTIPLY', p[3])    
    
 
 def p_expression_group(p):
@@ -90,6 +94,6 @@ def p_expression_group(p):
     p[0] = p[2]
 
 def p_error(p):
-    print(f"Error in syntax in line {p.lineno}")   
+    print(f"Error in syntax in line {p.lineno}")      
              
 parser = yacc.yacc()
