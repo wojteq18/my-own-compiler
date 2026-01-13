@@ -10,17 +10,19 @@ class NumberNode(Node): #dziedziczy po Node
     def __init__(self, value):
         self.value = value
 
-    def generate(self):
-        return generate_number(int(self.value))
+    def generate(self, buffer):
+        code = generate_number(int(self.value))
+        for line in code.splitlines():
+            if line.strip():
+                buffer.add_instr(line.strip())
     
 class VariableNode(Node): #dziedziczy po Node
     def __init__(self, name):
         self.name = name    
 
-    def generate(self):
+    def generate(self, buffer):
         addr = get_addr(self.name)
-        code = f"LOAD {addr}\n"
-        return code    
+        buffer.add_instr(f"LOAD {addr}")  
     
 class BinaryOperationNode(Node): #dziedziczy po Node
     def __init__(self, left, operator, right):
@@ -28,21 +30,45 @@ class BinaryOperationNode(Node): #dziedziczy po Node
         self.operator = operator
         self.right = right
 
-    def generate(self):
-        code = self.left.generate() #obliczamy lewą stronę - wynik ląduje w rejestrze 'a'
-        reg = reg_manager.get_register()
-        code += f"SWP {reg}\n"  # Przechowujemy wynik lewej strony w rejestrze pomocniczym
+    def generate(self, buffer):
+        self.left.generate(buffer)
+        reg_left = reg_manager.get_register()
+        buffer.add_instr(f"SWP {reg_left}")
 
-        code += self.right.generate() #obliczamy prawą stronę - wynik ląduje w rejestrze 'a'
+        self.right.generate(buffer)
 
-        if self.operator == 'ADD':
-            code += f"ADD {reg}\n"  # Dodajemy wartość z rejestru pomocniczego do akumulatora
-        elif self.operator == 'MINUS':    
-            code += f"SWP {reg}\n"
-            code += f"SUB {reg}\n"  # Odejmujemy wartość z rejestru pomocniczego od akumulatora
+        if self.operator == "ADD":
+            buffer.add_instr(f"ADD {reg_left}")
+        elif self.operator == "MINUS":
+            buffer.add_instr(f"SWP {reg_left}")
+            buffer.add_instr(f"SUB {reg_left}")
 
         reg_manager.release_register()
-        return code
+
+class AssignmentNode(Node):
+    def __init__(self, name, expression):
+        self.name = name
+        self.expression = expression
+
+    def generate(self, buffer):
+        self.expression.generate(buffer)
+        addr = get_addr(self.name)
+        buffer.add_instr(f"STORE {addr}")
+
+class ReadNode(Node):
+    def __init__(self, name):
+        self.name = name
+    def generate(self, buffer):
+        addr = get_addr(self.name)
+        buffer.add_instr("READ")
+        buffer.add_instr(f"STORE {addr}")
+
+class WriteNode(Node):
+    def __init__(self, value_node):
+        self.value_node = value_node
+    def generate(self, buffer):
+        self.value_node.generate(buffer)
+        buffer.add_instr("WRITE")            
 
 
 

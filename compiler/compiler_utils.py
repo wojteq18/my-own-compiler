@@ -1,3 +1,5 @@
+from register_manager import reg_manager
+
 free_memory_address = 0
 symbols_table = {}
 
@@ -23,6 +25,17 @@ def generate_number(number_value):
             code += f"SHL a\n"  # Przesuń w lewo (mnożenie przez 2)
             if bit == '1':
                 code += f"INC a\n"  # Dodaj jeden, jeśli bit to 1
-    code += f"SWP a\n"
-    return code            
+    #code += f"SWP a\n"
+    return code     
+
+#def generate_multiplication(self, reg_b):
+    reg_c = reg_manager.get_register()
+    reg_res = reg_manager.get_register()
+    reg_temp = reg_manager.get_register()
+
+    code = f"SWP {reg_c}\n"
+    code += f"RST {reg_res}\n"  # Wynik w rejestrze res
+
+    code += f"RST {reg_temp}\n"
+    code += f"INC {reg_temp}\n"  # Ustaw
 
