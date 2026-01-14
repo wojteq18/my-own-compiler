@@ -3,7 +3,7 @@ from lexer import tokens
 from compiler_utils import get_addr, symbols_table, free_memory_address, generate_number
 import sys
 from register_manager import reg_manager
-from abstract_syntax_tree import AssignmentNode, NumberNode, BinaryOperationNode, ReadNode, VariableNode, WriteNode
+from abstract_syntax_tree import AssignmentNode, NumberNode, BinaryOperationNode, ReadNode, VariableNode, WriteNode, IfNode, ConditionNode
 from code_buffer import CodeBuffer
 
 precedence = (
@@ -89,6 +89,22 @@ def p_expression_multiply(p):
     'expression : expression MULTIPLY expression'
     p[0] = BinaryOperationNode(p[1], 'MULTIPLY', p[3]) 
 
+def p_expression_if(p):
+    'command : IF condition THEN commands ELSE commands ENDIF'
+    p[0] = IfNode(p[2], p[4], p[6])
+
+def p_expression_if_no_else(p):
+    'command : IF condition THEN commands ENDIF'
+    p[0] = IfNode(p[2], p[4]) 
+
+def p_condition_less(p):
+    'condition : expression LESS expression'
+    p[0] = ConditionNode(p[1], '<', p[3])
+
+def p_condition_greater(p):
+    'condition : expression GREATER expression'
+    p[0] = ConditionNode(p[1], '>', p[3])
+
 def p_expression_divide(p):
     'expression : expression DIVIDE expression'
     p[0] = BinaryOperationNode(p[1], 'DIVIDE', p[3])
@@ -97,7 +113,6 @@ def p_expression_modulo(p):
     'expression : expression MODULO expression'
     p[0] = BinaryOperationNode(p[1], 'MODULO', p[3])           
    
-
 def p_expression_group(p):
     'expression : LPAREN expression RPAREN'
     p[0] = p[2]

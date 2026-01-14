@@ -70,7 +70,62 @@ class WriteNode(Node):
         self.value_node = value_node
     def generate(self, buffer):
         self.value_node.generate(buffer)
-        buffer.add_instr("WRITE")            
+        buffer.add_instr("WRITE")    
+
+class ConditionNode(Node):
+    def __init__(self, left, operator, right):
+        self.left = left
+        self.operator = operator
+        self.right = right
+
+    def generate(self, buffer, label_false):
+        if self.operator == '>':
+            self.left.generate(buffer)
+            reg_left = reg_manager.get_register()
+            buffer.add_instr(f"SWP {reg_left}")
+            self.right.generate(buffer)
+            buffer.add_instr(f"SWP {reg_left}")
+            buffer.add_instr(f"SUB {reg_left}")
+            buffer.add_instr(f"JZERO LABEL_{label_false}")
+            reg_manager.release_register()
+
+        elif self.operator == '<':
+            self.left.generate(buffer)
+            reg_left = reg_manager.get_register()
+            buffer.add_instr(f"SWP {reg_left}")
+            self.right.generate(buffer)
+            buffer.add_instr(f"SUB {reg_left}")
+            buffer.add_instr(f"JZERO LABEL_{label_false}")
+            reg_manager.release_register()
+
+class IfNode(Node):
+    def __init__(self, condition, then_commands, else_commands=None):
+        self.condition = condition
+        self.then_commands = then_commands
+        self.else_commands = else_commands
+
+    def generate(self, buffer):
+        label_else = buffer.get_new_label()
+        label_end = buffer.get_new_label()
+
+        self.condition.generate(buffer, label_else)
+
+        for cmd in self.then_commands:
+            cmd.generate(buffer)
+
+        buffer.add_instr(f"JUMP LABEL_{label_end}")
+
+        buffer.set_label(label_else)
+
+        if self.else_commands:
+            for cmd in self.else_commands:
+                cmd.generate(buffer)
+
+        buffer.set_label(label_end)                
+
+
+
+
 
 
 

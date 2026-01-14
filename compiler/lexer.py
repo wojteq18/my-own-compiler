@@ -20,6 +20,12 @@ tokens = (
     'MINUS',
     'LPAREN',
     'RPAREN',
+    'IF',
+    'ELSE',
+    'THEN',
+    'ENDIF',
+    'GREATER',
+    'LESS',
 )
 
 reserved = {
@@ -29,6 +35,10 @@ reserved = {
     'READ': 'READ',
     'END': 'END',
     'WRITE': 'WRITE',
+    'IF': 'IF',
+    'THEN': 'THEN',
+    'ELSE': 'ELSE',
+    'ENDIF': 'ENDIF',
 }
 
 t_ignore = ' \t'
@@ -77,6 +87,14 @@ def t_NUMBER(t):
 
 def t_ADD(t):
     r'\+'
+    return t
+
+def t_LESS(t):
+    r'<'
+    return t
+
+def t_GREATER(t):
+    r'>'
     return t
 
 def t_MODULO(t):
