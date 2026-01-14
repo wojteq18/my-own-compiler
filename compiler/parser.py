@@ -105,6 +105,14 @@ def p_condition_greater(p):
     'condition : expression GREATER expression'
     p[0] = ConditionNode(p[1], '>', p[3])
 
+def p_condition_equalsto(p):
+    'condition : expression EQUALSTO expression'
+    p[0] = ConditionNode(p[1], '==', p[3])
+
+def p_condition_notequal(p):
+    'condition : expression NOTEQUAL expression'
+    p[0] = ConditionNode(p[1], '!=', p[3])        
+
 def p_expression_divide(p):
     'expression : expression DIVIDE expression'
     p[0] = BinaryOperationNode(p[1], 'DIVIDE', p[3])

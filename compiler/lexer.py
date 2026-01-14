@@ -26,6 +26,8 @@ tokens = (
     'ENDIF',
     'GREATER',
     'LESS',
+    'EQUALSTO',
+    'NOTEQUAL',
 )
 
 reserved = {
@@ -95,6 +97,14 @@ def t_LESS(t):
 
 def t_GREATER(t):
     r'>'
+    return t
+
+def t_EQUALSTO(t):
+    r'=='
+    return t    
+
+def t_NOTEQUAL(t):
+    r'!='
     return t
 
 def t_MODULO(t):

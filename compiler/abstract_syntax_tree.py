@@ -98,6 +98,24 @@ class ConditionNode(Node):
             buffer.add_instr(f"JZERO LABEL_{label_false}")
             reg_manager.release_register()
 
+        elif self.operator == '==':
+            self.left.generate(buffer)
+            reg_left = reg_manager.get_register()
+            buffer.add_instr(f"SWP {reg_left}")
+            self.right.generate(buffer)
+            buffer.add_instr(f"SUB {reg_left}")
+            buffer.add_instr(f"JPOS LABEL_{label_false}")
+            reg_manager.release_register()
+
+        elif self.operator == '!=':
+            self.left.generate(buffer)
+            reg_left = reg_manager.get_register()
+            buffer.add_instr(f"SWP {reg_left}")
+            self.right.generate(buffer)
+            buffer.add_instr(f"SUB {reg_left}")
+            buffer.add_instr(f"JZERO LABEL_{label_false}")
+            reg_manager.release_register()  
+
 class IfNode(Node):
     def __init__(self, condition, then_commands, else_commands=None):
         self.condition = condition
