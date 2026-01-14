@@ -1,6 +1,6 @@
 import sys
 from register_manager import reg_manager
-from compiler_utils import generate_number, get_addr, gen_multiply
+from compiler_utils import generate_number, get_addr, gen_multiply, get_divide
 
 class Node:
     def generate(self):
@@ -11,10 +11,7 @@ class NumberNode(Node): #dziedziczy po Node
         self.value = value
 
     def generate(self, buffer):
-        code = generate_number(int(self.value))
-        for line in code.splitlines(): # podziel na linie
-            if line.strip(): # usuwa białe znaki
-                buffer.add_instr(line.strip())
+        generate_number(int(self.value), buffer)
     
 class VariableNode(Node): #dziedziczy po Node
     def __init__(self, name):
@@ -43,8 +40,11 @@ class BinaryOperationNode(Node): #dziedziczy po Node
             buffer.add_instr(f"SWP {reg_left}")
             buffer.add_instr(f"SUB {reg_left}")
         elif self.operator == "MULTIPLY":
-            gen_multiply(buffer, reg_left)    
-
+            gen_multiply(buffer, reg_left)
+        elif self.operator == "DIVIDE":        
+            get_divide(buffer, reg_left, "DIVIDE")
+        elif self.operator == "MODULO":
+            get_divide(buffer, reg_left, "MODULO")    
         reg_manager.release_register()
 
 class AssignmentNode(Node):

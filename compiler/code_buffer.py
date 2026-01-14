@@ -16,9 +16,10 @@ class CodeBuffer:
 
     def finalize(self):
         final_output = []
+        sorted_labels = sorted(self.labels.items(), key=lambda x: len(x[0]), reverse=True)
         for instr in self.instructions:
             processed_instr = instr
-            for label, line_num in self.labels.items():
+            for label, line_num in sorted_labels:
                 placeholder = f"LABEL_{label}"
                 if placeholder in processed_instr:
                     processed_instr = processed_instr.replace(placeholder, str(line_num))    

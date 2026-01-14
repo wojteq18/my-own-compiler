@@ -8,6 +8,7 @@ from code_buffer import CodeBuffer
 
 precedence = (
     ('left', 'ADD', 'MINUS'),
+    ('left', 'MULTIPLY', 'DIVIDE', 'MODULO'),
 )
 
 def p_program(p):
@@ -86,7 +87,15 @@ def p_expression_minus(p):
 
 def p_expression_multiply(p):
     'expression : expression MULTIPLY expression'
-    p[0] = BinaryOperationNode(p[1], 'MULTIPLY', p[3])    
+    p[0] = BinaryOperationNode(p[1], 'MULTIPLY', p[3]) 
+
+def p_expression_divide(p):
+    'expression : expression DIVIDE expression'
+    p[0] = BinaryOperationNode(p[1], 'DIVIDE', p[3])
+
+def p_expression_modulo(p):
+    'expression : expression MODULO expression'
+    p[0] = BinaryOperationNode(p[1], 'MODULO', p[3])           
    
 
 def p_expression_group(p):
