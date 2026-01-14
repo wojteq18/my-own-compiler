@@ -13,6 +13,7 @@ tokens = (
     'COMMA',
     'NUMBER',
     'DIVIDE',
+    'MODULO',
     'MULTIPLY',
     'ASSIGN',
     'ADD',
@@ -76,6 +77,10 @@ def t_NUMBER(t):
 
 def t_ADD(t):
     r'\+'
+    return t
+
+def t_MODULO(t):
+    r'%'
     return t
 
 def t_LPAREN(t):

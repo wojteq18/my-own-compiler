@@ -3,48 +3,50 @@ from lexer import tokens
 from compiler_utils import get_addr, symbols_table, free_memory_address, generate_number
 import sys
 from register_manager import reg_manager
-from abstract_syntax_tree import NumberNode, BinaryOperationNode, VariableNode
+from abstract_syntax_tree import AssignmentNode, NumberNode, BinaryOperationNode, ReadNode, VariableNode, WriteNode
+from code_buffer import CodeBuffer
 
 precedence = (
     ('left', 'ADD', 'MINUS'),
+    ('left', 'MULTIPLY', 'DIVIDE', 'MODULO'),
 )
 
 def p_program(p):
     'program : PROGRAM IS declarations IN commands END'
-    final_code = p[5] + "HALT"
-    p[0] = final_code
-    print("Generated Code:")
-    print(final_code)
+    buffer = CodeBuffer()
+    for cmd in p[5]:
+        cmd.generate(buffer)
+
+    buffer.add_instr("HALT")
+    p[0] = buffer.finalize()    
 
 def p_commands_multiple(p):
     'commands : commands command'
-    p[0] = p[1] + p[2]
+    p[0] = p[1] + [p[2]]
 
 def p_commands_single(p):
     'commands : command'
-    p[0] = p[1]   
+    p[0] = [p[1]]   
 
-def p_commandd_read(p):
+def p_command_read(p):
     'command : READ ID SEMICOLON'
-    variable_name = p[2]
-    if variable_name not in symbols_table:
-        sys.exit(f"Error: Variable '{variable_name}' not declared in line {p.lineno(2)}")
-        p[0] = ""
-        return
-    else:
-        addr = symbols_table[variable_name]
-    p[0] = f"READ\nSTORE {addr}\n"
+    if p[2] not in symbols_table:
+        sys.exit(f"Error: Variable '{p[2]}' not declared")
+    p[0] = ReadNode(p[2])
 
-def p_commands_write(p):
-    'command : WRITE ID SEMICOLON'
-    variable_anme = p[2]
-    if variable_anme not in symbols_table:
-        sys.exit(f"Error: Variable '{variable_anme}' not declared in line {p.lineno(2)}")
-        p[0] = ""
-        return
-    else:
-        addr = symbols_table[variable_anme]
-    p[0] = f"LOAD {addr}\nWRITE\n"
+def p_command_write(p):
+    'command : WRITE value SEMICOLON'
+    p[0] = WriteNode(p[2])
+
+def p_value_num(p):
+    'value : NUMBER'
+    p[0] = NumberNode(p[1])
+
+def p_value_id(p): 
+    'value : ID'
+    if p[1] not in symbols_table:
+        sys.exit(f"Error: Variable '{p[1]}' not declared")
+    p[0] = VariableNode(p[1])       
 
 
 def p_variable_declaration_single(p):
@@ -55,17 +57,9 @@ def p_variable_declaration_single(p):
 
 def p_assign_command(p):
     'command : ID ASSIGN expression SEMICOLON'
-    variable_name = p[1]
-    if variable_name not in symbols_table:
-        sys.exit(f"Error: Variable '{variable_name}' not declared in line {p.lineno(1)}")
-        p[0] = ""
-        return
-    else:
-        addr = symbols_table[variable_name]
-
-    expression_tree = p[3] 
-    expression_code = expression_tree.generate()
-    p[0] = f"{expression_code}STORE {addr}\n"
+    if p[1] not in symbols_table:
+        sys.exit(f"Error: Variable '{p[1]}' not declared")
+    p[0] = AssignmentNode(p[1], p[3])
 
 
 def p_expression_number(p):
@@ -90,6 +84,18 @@ def p_expression_addition(p):
 def p_expression_minus(p):
     'expression : expression MINUS expression'
     p[0] = BinaryOperationNode(p[1], 'MINUS', p[3])
+
+def p_expression_multiply(p):
+    'expression : expression MULTIPLY expression'
+    p[0] = BinaryOperationNode(p[1], 'MULTIPLY', p[3]) 
+
+def p_expression_divide(p):
+    'expression : expression DIVIDE expression'
+    p[0] = BinaryOperationNode(p[1], 'DIVIDE', p[3])
+
+def p_expression_modulo(p):
+    'expression : expression MODULO expression'
+    p[0] = BinaryOperationNode(p[1], 'MODULO', p[3])           
    
 
 def p_expression_group(p):
@@ -97,6 +103,6 @@ def p_expression_group(p):
     p[0] = p[2]
 
 def p_error(p):
-    print(f"Error in syntax in line {p.lineno}")   
+    print(f"Error in syntax in line {p.lineno}")      
              
 parser = yacc.yacc()
