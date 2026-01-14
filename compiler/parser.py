@@ -3,7 +3,7 @@ from lexer import tokens
 from compiler_utils import get_addr, symbols_table, free_memory_address, generate_number
 import sys
 from register_manager import reg_manager
-from abstract_syntax_tree import AssignmentNode, NumberNode, BinaryOperationNode, ReadNode, VariableNode, WriteNode, IfNode, ConditionNode
+from abstract_syntax_tree import AssignmentNode, NumberNode, BinaryOperationNode, ReadNode, VariableNode, WhileNode, WriteNode, IfNode, ConditionNode
 from code_buffer import CodeBuffer
 
 precedence = (
@@ -96,6 +96,10 @@ def p_expression_if(p):
 def p_expression_if_no_else(p):
     'command : IF condition THEN commands ENDIF'
     p[0] = IfNode(p[2], p[4]) 
+
+def p_expression_while(p):
+    'command : WHILE condition DO commands ENDWHILE'
+    p[0] = WhileNode(p[2], p[4])    
 
 def p_condition_less(p):
     'condition : expression LESS expression'

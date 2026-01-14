@@ -28,6 +28,9 @@ tokens = (
     'LESS',
     'EQUALSTO',
     'NOTEQUAL',
+    'WHILE',
+    'DO',
+    'ENDWHILE',
 )
 
 reserved = {
@@ -41,6 +44,9 @@ reserved = {
     'THEN': 'THEN',
     'ELSE': 'ELSE',
     'ENDIF': 'ENDIF',
+    'WHILE': 'WHILE',
+    'DO': 'DO',
+    'ENDWHILE': 'ENDWHILE',
 }
 
 t_ignore = ' \t'

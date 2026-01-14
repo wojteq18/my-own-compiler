@@ -139,13 +139,21 @@ class IfNode(Node):
             for cmd in self.else_commands:
                 cmd.generate(buffer)
 
-        buffer.set_label(label_end)                
+        buffer.set_label(label_end)
 
+class WhileNode(Node):
+    def __init__(self, condition, commands):
+        self.condition = condition
+        self.commands = commands   
 
+    def generate(self, buffer):
+        label_start = buffer.get_new_label()
+        label_end = buffer.get_new_label()  
 
+        buffer.set_label(label_start)
+        self.condition.generate(buffer, label_end)  
+        for cmd in self.commands:
+            cmd.generate(buffer) 
+        buffer.add_instr(f"JUMP LABEL_{label_start}")
+        buffer.set_label(label_end)
 
-
-
-
-
-    
