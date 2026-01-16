@@ -20,6 +20,19 @@ tokens = (
     'MINUS',
     'LPAREN',
     'RPAREN',
+    'IF',
+    'ELSE',
+    'THEN',
+    'ENDIF',
+    'GREATER',
+    'LESS',
+    'EQUALSTO',
+    'NOTEQUAL',
+    'WHILE',
+    'DO',
+    'ENDWHILE',
+    'BIGGEROREQUALS',
+    'LESSOREQULAS',
 )
 
 reserved = {
@@ -29,6 +42,13 @@ reserved = {
     'READ': 'READ',
     'END': 'END',
     'WRITE': 'WRITE',
+    'IF': 'IF',
+    'THEN': 'THEN',
+    'ELSE': 'ELSE',
+    'ENDIF': 'ENDIF',
+    'WHILE': 'WHILE',
+    'DO': 'DO',
+    'ENDWHILE': 'ENDWHILE',
 }
 
 t_ignore = ' \t'
@@ -75,8 +95,33 @@ def t_NUMBER(t):
     t.value = int(t.value)
     return t 
 
+def t_BIGGEROREQUALS(t):
+    r'>='
+    return t
+
+def t_LESSOREQULAS(t):
+    r'<='
+    return t
+
+
 def t_ADD(t):
     r'\+'
+    return t
+
+def t_LESS(t):
+    r'<'
+    return t
+
+def t_GREATER(t):
+    r'>'
+    return t
+
+def t_EQUALSTO(t):
+    r'='
+    return t    
+
+def t_NOTEQUAL(t):
+    r'!='
     return t
 
 def t_MODULO(t):
