@@ -119,7 +119,11 @@ def p_condition_notequal(p):
 
 def p_condition_biggerorequals(p):
     'condition : expression BIGGEROREQUALS expression'
-    p[0] = ConditionNode(p[1], '>=', p[3])        
+    p[0] = ConditionNode(p[1], '>=', p[3])   
+
+def p_condition_LESSOREQULAS(p):
+    'condition : expression LESSOREQULAS expression'
+    p[0] = ConditionNode(p[1], '<=', p[3])         
 
 def p_expression_divide(p):
     'expression : expression DIVIDE expression'
