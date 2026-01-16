@@ -106,7 +106,7 @@ def t_GREATER(t):
     return t
 
 def t_EQUALSTO(t):
-    r'=='
+    r'='
     return t    
 
 def t_NOTEQUAL(t):

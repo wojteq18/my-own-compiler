@@ -111,7 +111,7 @@ def p_condition_greater(p):
 
 def p_condition_equalsto(p):
     'condition : expression EQUALSTO expression'
-    p[0] = ConditionNode(p[1], '==', p[3])
+    p[0] = ConditionNode(p[1], '=', p[3])
 
 def p_condition_notequal(p):
     'condition : expression NOTEQUAL expression'
