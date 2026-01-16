@@ -31,6 +31,7 @@ tokens = (
     'WHILE',
     'DO',
     'ENDWHILE',
+    'BIGGEROREQUALS'
 )
 
 reserved = {
@@ -92,6 +93,11 @@ def t_NUMBER(t):
     r'\d+'
     t.value = int(t.value)
     return t 
+
+def t_BIGGEROREQUALS(t):
+    r'>='
+    return t
+
 
 def t_ADD(t):
     r'\+'
