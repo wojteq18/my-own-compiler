@@ -101,10 +101,29 @@ class ConditionNode(Node):
         elif self.operator == '=':
             self.left.generate(buffer)
             reg_left = reg_manager.get_register()
-            buffer.add_instr(f"SWP {reg_left}")
+            buffer.add_instr(f"SWP {reg_left}") #lewy w left rejestrze
+
             self.right.generate(buffer)
+            reg_right = reg_manager.get_register()
+            buffer.add_instr(f"SWP {reg_right}") #prawy w right rejestrze
+
+            reg_sum = reg_manager.get_register() #rejestr na sume roznic
+            buffer.add_instr(f"RST {reg_sum}")
+
+            buffer.add_instr("RST a")
+            buffer.add_instr(f"ADD {reg_left}")
+            buffer.add_instr(f"SUB {reg_right}")
+            buffer.add_instr(f"ADD {reg_sum}")
+            buffer.add_instr(f"SWP {reg_sum}")
+
+            buffer.add_instr("RST a")
+            buffer.add_instr(f"ADD {reg_right}")
             buffer.add_instr(f"SUB {reg_left}")
+            buffer.add_instr(f"ADD {reg_sum}")
+
             buffer.add_instr(f"JPOS LABEL_{label_false}")
+            reg_manager.release_register()
+            reg_manager.release_register()
             reg_manager.release_register()
 
         elif self.operator == '!=':
@@ -114,7 +133,13 @@ class ConditionNode(Node):
             self.right.generate(buffer)
             buffer.add_instr(f"SUB {reg_left}")
             buffer.add_instr(f"JZERO LABEL_{label_false}")
-            reg_manager.release_register()  
+            reg_manager.release_register() 
+
+        elif self.operator == '>=':
+            self.left.generate(buffer)
+            reg_left = reg_manager.get_register()
+            buffer.add_instr(f"SWP {reg_left}")
+            self.right.generate(buffer)     
 
 class IfNode(Node):
     def __init__(self, condition, then_commands, else_commands=None):
