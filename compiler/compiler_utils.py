@@ -1,6 +1,6 @@
 from register_manager import reg_manager
 
-free_memory_address = 0
+free_memory_address = 8
 symbols_table = {}
 
 def get_addr(variable_name): #Przyporządkowuje unikalny adres w pamięci dla zmiennej

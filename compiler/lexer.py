@@ -33,6 +33,10 @@ tokens = (
     'ENDWHILE',
     'BIGGEROREQUALS',
     'LESSOREQULAS',
+    'FOR',
+    'TO',
+    'ENDFOR',
+    'FROM',
 )
 
 reserved = {
@@ -49,6 +53,10 @@ reserved = {
     'WHILE': 'WHILE',
     'DO': 'DO',
     'ENDWHILE': 'ENDWHILE',
+    'FOR': 'FOR',
+    'TO': 'TO',
+    'ENDFOR': 'ENDFOR',
+    'FROM': 'FROM',
 }
 
 t_ignore = ' \t'
