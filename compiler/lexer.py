@@ -37,6 +37,7 @@ tokens = (
     'TO',
     'ENDFOR',
     'FROM',
+    'DOWNTO',
 )
 
 reserved = {
@@ -56,6 +57,7 @@ reserved = {
     'FOR': 'FOR',
     'TO': 'TO',
     'ENDFOR': 'ENDFOR',
+    'DOWNTO': 'DOWNTO',
     'FROM': 'FROM',
 }
 
