@@ -195,3 +195,103 @@ class WhileNode(Node):
         buffer.add_instr(f"JUMP LABEL_{label_start}")
         buffer.set_label(label_end)
 
+class ForNodeTo(Node):
+    def __init__(self, var_name, start_value, end_value, commands):
+        self.var_name = var_name
+        self.start_value = start_value
+        self.end_value = end_value
+        self.commands = commands
+
+    def generate(self, buffer):
+        addr_i = get_addr(self.var_name)
+        addr_limit = get_addr(f"limit_{buffer.get_new_label()}")
+
+        self.start_value.generate(buffer)
+        buffer.add_instr(f"STORE {addr_i}")
+        
+        self.end_value.generate(buffer)
+        buffer.add_instr(f"STORE {addr_limit}")
+
+        l_start = buffer.get_new_label()
+        l_end = buffer.get_new_label()
+
+        buffer.set_label(l_start)
+
+        buffer.add_instr(f"LOAD {addr_i}")   
+        
+        reg_limit = reg_manager.get_register()
+        buffer.add_instr(f"SWP {reg_limit}")    
+        buffer.add_instr(f"LOAD {addr_limit}")  
+        buffer.add_instr(f"SWP {reg_limit}")   
+        
+        buffer.add_instr(f"SUB {reg_limit}")    
+        buffer.add_instr(f"JPOS LABEL_{l_end}")
+        reg_manager.release_register()
+
+        for cmd in self.commands:
+            cmd.generate(buffer)
+
+        buffer.add_instr(f"LOAD {addr_i}")
+        buffer.add_instr("INC a")
+        buffer.add_instr(f"STORE {addr_i}")
+        buffer.add_instr(f"JUMP LABEL_{l_start}")
+
+        buffer.set_label(l_end)
+
+class ForNodeDownTo(Node):
+    def __init__(self, var_name, start_value, end_value, commands):
+        self.var_name = var_name
+        self.start_value = start_value
+        self.end_value = end_value
+        self.commands = commands       
+
+    def generate(self, buffer):
+        addr_i = get_addr(self.var_name)
+        addr_limit = get_addr(f"limit_{buffer.get_new_label()}")
+
+        self.start_value.generate(buffer)
+        buffer.add_instr(f"STORE {addr_i}")
+        
+        self.end_value.generate(buffer)
+        buffer.add_instr(f"STORE {addr_limit}")
+
+        l_start = buffer.get_new_label()
+        l_end = buffer.get_new_label()
+
+        buffer.set_label(l_start)
+
+        buffer.add_instr(f"LOAD {addr_i}")   
+        
+        reg_limit = reg_manager.get_register()
+        buffer.add_instr(f"SWP {reg_limit}")    
+        buffer.add_instr(f"LOAD {addr_limit}")  
+        #buffer.add_instr(f"SWP {reg_limit}")   
+        
+        buffer.add_instr(f"SUB {reg_limit}")    
+        buffer.add_instr(f"JPOS LABEL_{l_end}")
+        reg_manager.release_register()
+
+        for cmd in self.commands:
+            cmd.generate(buffer)
+
+        buffer.add_instr(f"LOAD {addr_i}")
+        buffer.add_instr(f"JZERO LABEL_{l_end}")
+        buffer.add_instr("DEC a")
+        buffer.add_instr(f"STORE {addr_i}")
+        buffer.add_instr(f"JUMP LABEL_{l_start}")
+
+        buffer.set_label(l_end)
+
+class RepeatNode(Node):
+    def __init__(self, commands, condition):
+        self.commands = commands
+        self.condition = condition
+
+    def generate(self, buffer):
+        label_start = buffer.get_new_label()
+        buffer.set_label(label_start)
+
+        for cmd in self.commands:
+            cmd.generate(buffer)
+
+        self.condition.generate(buffer, label_start)    

@@ -3,7 +3,7 @@ from lexer import tokens
 from compiler_utils import get_addr, symbols_table, free_memory_address, generate_number
 import sys
 from register_manager import reg_manager
-from abstract_syntax_tree import AssignmentNode, NumberNode, BinaryOperationNode, ReadNode, VariableNode, WhileNode, WriteNode, IfNode, ConditionNode
+from abstract_syntax_tree import AssignmentNode, NumberNode, BinaryOperationNode, ReadNode, VariableNode, WhileNode, WriteNode, IfNode, ConditionNode, ForNodeTo, ForNodeDownTo, RepeatNode
 from code_buffer import CodeBuffer
 
 precedence = (
@@ -66,6 +66,7 @@ def p_expression_number(p):
     'expression : NUMBER'
     p[0] = NumberNode(p[1]) 
 
+
 def p_expression_variable(p):
     'expression : ID'
     p[0] = VariableNode(p[1])   
@@ -99,7 +100,28 @@ def p_expression_if_no_else(p):
 
 def p_expression_while(p):
     'command : WHILE condition DO commands ENDWHILE'
-    p[0] = WhileNode(p[2], p[4])    
+    p[0] = WhileNode(p[2], p[4])  
+
+def p_command_forto(p):
+    'command : for_iterator FROM value TO value DO commands ENDFOR' 
+    if p[2] not in symbols_table:
+        addr = get_addr(p[2]) 
+    p[0] = ForNodeTo(p[1], p[3], p[5], p[7]) 
+
+def p_command_repeatuntil(p):
+    'command : REPEAT commands UNTIL condition SEMICOLON'
+    p[0] = RepeatNode(p[2], p[4])
+
+def p_for_iterator(p):
+    'for_iterator : FOR ID'
+    if p[2] not in symbols_table:
+        get_addr(p[2])
+    p[0] = p[2]        
+
+def p_command_fordownto(p):
+    'command : for_iterator FROM value DOWNTO value DO commands ENDFOR' 
+    p[0] = ForNodeDownTo(p[1], p[3], p[5], p[7])    
+
 
 def p_condition_less(p):
     'condition : expression LESS expression'
