@@ -281,3 +281,17 @@ class ForNodeDownTo(Node):
         buffer.add_instr(f"JUMP LABEL_{l_start}")
 
         buffer.set_label(l_end)
+
+class RepeatNode(Node):
+    def __init__(self, commands, condition):
+        self.commands = commands
+        self.condition = condition
+
+    def generate(self, buffer):
+        label_start = buffer.get_new_label()
+        buffer.set_label(label_start)
+
+        for cmd in self.commands:
+            cmd.generate(buffer)
+
+        self.condition.generate(buffer, label_start)    

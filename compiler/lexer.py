@@ -38,6 +38,8 @@ tokens = (
     'ENDFOR',
     'FROM',
     'DOWNTO',
+    'REPEAT',
+    'UNTIL',
 )
 
 reserved = {
@@ -59,6 +61,8 @@ reserved = {
     'ENDFOR': 'ENDFOR',
     'DOWNTO': 'DOWNTO',
     'FROM': 'FROM',
+    'REPEAT': 'REPEAT',
+    'UNTIL': 'UNTIL',
 }
 
 t_ignore = ' \t'
