@@ -159,3 +159,26 @@ def get_divide(buffer, reg_m1, operator):
         reg_manager.release_register()
 
 
+def get_array_addr(name, start, end):
+    global free_memory_address
+    global symbols_table
+    if name in symbols_table:
+        import sys
+        sys.exit(f"Error: Variable/Array '{name}' already declared")
+    
+    start = int(start)
+    end = int(end)
+    if start > end:
+        import sys
+        sys.exit(f"Error: Invalid array range [{start}:{end}]") 
+
+    size = end - start + 1
+    base_addr = free_memory_address
+    symbols_table[name] = {
+        'type': 'array',
+        'addr': base_addr,
+        'start': start,
+        'end': end
+    }
+    free_memory_address += size
+    return base_addr

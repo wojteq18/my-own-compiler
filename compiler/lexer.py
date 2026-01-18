@@ -40,6 +40,9 @@ tokens = (
     'DOWNTO',
     'REPEAT',
     'UNTIL',
+    'LBRACKET',
+    'RBRACKET',
+    'COLON',
 )
 
 reserved = {
@@ -63,6 +66,7 @@ reserved = {
     'FROM': 'FROM',
     'REPEAT': 'REPEAT',
     'UNTIL': 'UNTIL',
+    
 }
 
 t_ignore = ' \t'
@@ -76,13 +80,26 @@ def t_SEMICOLON(t):
     r';'
     return t
 
-def t_MULTIPLY(t):
-    r'\*'
+def t_LBRACKET(t):
+    r'\['
+    return t
+
+def t_RBRACKET(t):
+    r'\]'
     return t
 
 def t_ASSIGN(t):
     r':='
     return t
+
+def t_COLON(t):
+    r':'
+    return t
+
+def t_MULTIPLY(t):
+    r'\*'
+    return t
+
 
 def t_DIVIDE(t):
     r'/'
