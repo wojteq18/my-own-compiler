@@ -1,6 +1,6 @@
 import sys
 from register_manager import reg_manager
-from compiler_utils import generate_number, get_addr, gen_multiply, get_divide
+from compiler_utils import generate_number, get_addr, gen_multiply, get_divide, symbols_table
 
 class Node:
     def generate(self):
@@ -48,22 +48,42 @@ class BinaryOperationNode(Node): #dziedziczy po Node
         reg_manager.release_register()
 
 class AssignmentNode(Node):
-    def __init__(self, name, expression):
-        self.name = name
+    def __init__(self, target, expression):
+        self.target = target 
         self.expression = expression
 
     def generate(self, buffer):
-        self.expression.generate(buffer)
-        addr = get_addr(self.name)
-        buffer.add_instr(f"STORE {addr}")
+        self.expression.generate(buffer) 
+        
+        if isinstance(self.target, VariableNode):
+            addr = get_addr(self.target.name)
+            buffer.add_instr(f"STORE {addr}") 
+        else: # ArrayElementNode
+            reg_val = reg_manager.get_register()
+            buffer.add_instr(f"SWP {reg_val}")
+            reg_addr = reg_manager.get_register()
+            self.target.generate_address(buffer, reg_addr)
+            buffer.add_instr("RST a")
+            buffer.add_instr(f"ADD {reg_val}")
+            buffer.add_instr(f"RSTORE {reg_addr}")
+            reg_manager.release_register()
+            reg_manager.release_register()
 
 class ReadNode(Node):
-    def __init__(self, name):
-        self.name = name
+    def __init__(self, target):
+        self.target = target
+
     def generate(self, buffer):
-        addr = get_addr(self.name)
-        buffer.add_instr("READ")
-        buffer.add_instr(f"STORE {addr}")
+        if isinstance(self.target, VariableNode):
+            addr = get_addr(self.target.name)
+            buffer.add_instr("READ") 
+            buffer.add_instr(f"STORE {addr}") 
+        elif isinstance(self.target, ArrayElementNode):
+            reg_addr = reg_manager.get_register()
+            self.target.generate_address(buffer, reg_addr)
+            buffer.add_instr("READ")
+            buffer.add_instr(f"RSTORE {reg_addr}")
+            reg_manager.release_register()
 
 class WriteNode(Node):
     def __init__(self, value_node):
@@ -295,3 +315,42 @@ class RepeatNode(Node):
             cmd.generate(buffer)
 
         self.condition.generate(buffer, label_start)    
+
+class ArrayElementNode(Node):
+    def __init__(self, name, index_node):
+        self.name = name
+        self.index_node = index_node
+
+    def generate_address(self, buffer, target_reg):
+        """Oblicza adres fizyczny tab[i] i umieszcza go w target_reg"""
+        info = symbols_table[self.name]
+        
+        self.index_node.generate(buffer) 
+        
+        reg_index_val = reg_manager.get_register()
+        buffer.add_instr(f"SWP {reg_index_val}")
+        
+        generate_number(info['start'], buffer)
+        reg_start = reg_manager.get_register()
+        buffer.add_instr(f"SWP {reg_start}") 
+        
+        buffer.add_instr("RST a")
+        buffer.add_instr(f"ADD {reg_index_val}")
+        buffer.add_instr(f"SUB {reg_start}")     
+        reg_manager.release_register() 
+        
+        buffer.add_instr(f"SWP {reg_index_val}") 
+        
+        generate_number(info['addr'], buffer)   
+        
+        buffer.add_instr(f"ADD {reg_index_val}")
+        
+        buffer.add_instr(f"SWP {target_reg}")
+        
+        reg_manager.release_register() 
+
+    def generate(self, buffer):
+        reg_addr = reg_manager.get_register()
+        self.generate_address(buffer, reg_addr)
+        buffer.add_instr(f"RLOAD {reg_addr}") 
+        reg_manager.release_register()        

@@ -1,9 +1,9 @@
 import ply.yacc as yacc
 from lexer import tokens
-from compiler_utils import get_addr, symbols_table, free_memory_address, generate_number
+from compiler_utils import get_addr, symbols_table, free_memory_address, generate_number, get_array_addr
 import sys
 from register_manager import reg_manager
-from abstract_syntax_tree import AssignmentNode, NumberNode, BinaryOperationNode, ReadNode, VariableNode, WhileNode, WriteNode, IfNode, ConditionNode, ForNodeTo, ForNodeDownTo, RepeatNode
+from abstract_syntax_tree import AssignmentNode, NumberNode, BinaryOperationNode, ReadNode, VariableNode, WhileNode, WriteNode, ArrayElementNode, IfNode, ConditionNode, ForNodeTo, ForNodeDownTo, RepeatNode
 from code_buffer import CodeBuffer
 
 precedence = (
@@ -29,9 +29,7 @@ def p_commands_single(p):
     p[0] = [p[1]]   
 
 def p_command_read(p):
-    'command : READ ID SEMICOLON'
-    if p[2] not in symbols_table:
-        sys.exit(f"Error: Variable '{p[2]}' not declared")
+    'command : READ identifier SEMICOLON'
     p[0] = ReadNode(p[2])
 
 def p_command_write(p):
@@ -43,10 +41,8 @@ def p_value_num(p):
     p[0] = NumberNode(p[1])
 
 def p_value_id(p): 
-    'value : ID'
-    if p[1] not in symbols_table:
-        sys.exit(f"Error: Variable '{p[1]}' not declared")
-    p[0] = VariableNode(p[1])       
+    'value : identifier'
+    p[0] = p[1]       
 
 
 def p_variable_declaration_single(p):
@@ -56,20 +52,13 @@ def p_variable_declaration_single(p):
     print(f"Zmienna {p[1]} zarejestrowana pod adresem {addr}") 
 
 def p_assign_command(p):
-    'command : ID ASSIGN expression SEMICOLON'
-    if p[1] not in symbols_table:
-        sys.exit(f"Error: Variable '{p[1]}' not declared")
+    'command : identifier ASSIGN expression SEMICOLON'
     p[0] = AssignmentNode(p[1], p[3])
 
 
-def p_expression_number(p):
-    'expression : NUMBER'
-    p[0] = NumberNode(p[1]) 
-
-
-def p_expression_variable(p):
-    'expression : ID'
-    p[0] = VariableNode(p[1])   
+def p_expression_value(p):
+    'expression : value'
+    p[0] = p[1]
 
 
 def p_variable_declaration_multiple(p):
@@ -104,8 +93,6 @@ def p_expression_while(p):
 
 def p_command_forto(p):
     'command : for_iterator FROM value TO value DO commands ENDFOR' 
-    if p[2] not in symbols_table:
-        addr = get_addr(p[2]) 
     p[0] = ForNodeTo(p[1], p[3], p[5], p[7]) 
 
 def p_command_repeatuntil(p):
@@ -158,6 +145,30 @@ def p_expression_modulo(p):
 def p_expression_group(p):
     'expression : LPAREN expression RPAREN'
     p[0] = p[2]
+
+def p_variable_declaration_array(p):
+    '''declarations : ID LBRACKET NUMBER COLON NUMBER RBRACKET
+                    | declarations COMMA ID LBRACKET NUMBER COLON NUMBER RBRACKET'''
+    if len(p) == 7:
+        get_array_addr(p[1], p[3], p[5])
+    else: 
+        get_array_addr(p[3], p[5], p[7])    
+
+def p_identifier_simple(p):
+    'identifier : ID'
+    if p[1] not in symbols_table:
+        sys.exit(f"Error: Variable '{p[1]}' not declared")
+    p[0] = VariableNode(p[1])
+
+def p_identifier_array_var(p):
+    'identifier : ID LBRACKET ID RBRACKET'
+    if p[3] not in symbols_table:
+        sys.exit(f"Error: Variable '{p[3]}' not declared")
+    p[0] = ArrayElementNode(p[1], VariableNode(p[3]))
+
+def p_identifier_array_num(p):
+    'identifier : ID LBRACKET NUMBER RBRACKET'
+    p[0] = ArrayElementNode(p[1], NumberNode(p[3]))        
 
 def p_error(p):
     print(f"Error in syntax in line {p.lineno}")      
