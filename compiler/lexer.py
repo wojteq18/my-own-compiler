@@ -43,6 +43,11 @@ tokens = (
     'LBRACKET',
     'RBRACKET',
     'COLON',
+    'PROCEDURE',
+    'T',
+    'I',
+    'O',
+
 )
 
 reserved = {
@@ -66,14 +71,24 @@ reserved = {
     'FROM': 'FROM',
     'REPEAT': 'REPEAT',
     'UNTIL': 'UNTIL',
-    
+    'PROCEDURE': 'PROCEDURE',
+    'T' : 'T',
+    'I' : 'I',
+    'O' : 'O',
 }
 
 t_ignore = ' \t'
 
 def t_ID(t):
-    r'[a-zA-Z_][a-zA-Z0-9_]*'
-    t.type = reserved.get(t.value.upper(), 'ID')  # Sprawdź czy to słowo kluczowe
+    r'[a-z_][a-z0-9_]*' 
+    t.type = reserved.get(t.value, 'ID') 
+    return t
+
+def t_RESERVED(t):
+    r'[A-Z]+'
+    t.type = reserved.get(t.value, 'ID')
+    if t.type == 'ID':
+        sys.exit(f"Error: Unknown keyword or invalid identifier '{t.value}' at line {t.lineno}")
     return t
 
 def t_SEMICOLON(t):
@@ -165,6 +180,22 @@ def t_LPAREN(t):
 
 def t_RPAREN(t):
     r'\)'
+    return t
+
+def t_PROCEDURE(t):
+    r'PROCEDURE'
+    return t
+
+def t_T(t):
+    r'T'
+    return t
+
+def t_I(t):
+    r'I'
+    return t
+
+def t_O(t):
+    r'O'
     return t
 
 def t_error(t):
