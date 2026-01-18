@@ -1,6 +1,6 @@
 import ply.yacc as yacc
 from lexer import tokens
-from compiler_utils import get_addr, symbols_table, free_memory_address, generate_number, get_array_addr, procedures_table
+from compiler_utils import get_addr, symbols_table, free_memory_address, get_array_addr, procedures_table
 import sys
 from register_manager import reg_manager
 from abstract_syntax_tree import AssignmentNode, CallNode, NumberNode, BinaryOperationNode, ProcedureNode, ReadNode, VariableNode, WhileNode, WriteNode, ArrayElementNode, IfNode, ConditionNode, ForNodeTo, ForNodeDownTo, RepeatNode
