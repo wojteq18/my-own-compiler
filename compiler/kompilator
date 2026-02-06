@@ -1,0 +1,52 @@
+#!/usr/bin/env python3
+import sys
+import os
+
+# Importujemy obiekt parser z Twojego pliku parser.py
+try:
+    from parser import parser
+except ImportError as e:
+    print(f"Błąd importu: {e}")
+    print("Upewnij się, że plik parser.py znajduje się w tym samym folderze.")
+    sys.exit(1)
+
+def run():
+    # Sprawdzenie liczby argumentów (./kompilator input output)
+    if len(sys.argv) != 3:
+        print("Użycie: ./kompilator <source_file> <output_file>")
+        sys.exit(1)
+    
+    source_file = sys.argv[1]
+    output_file = sys.argv[2]
+
+    # Sprawdzenie czy plik wejściowy istnieje
+    if not os.path.exists(source_file):
+        print(f"Błąd: Plik źródłowy '{source_file}' nie istnieje.")
+        sys.exit(1)
+
+    try:
+        with open(source_file, 'r') as f:
+            source_code = f.read()
+            
+            # Wywołanie Twojego parsera (tak jak w main.py)
+            result = parser.parse(source_code)
+
+            if result:
+                with open(output_file, 'w') as out_f:
+                    # Jeśli result to lista instrukcji, złączamy je. 
+                    # Jeśli to gotowy string, po prostu zapisujemy.
+                    if isinstance(result, list):
+                        out_f.write("\n".join(map(str, result)) + "\n")
+                    else:
+                        out_f.write(str(result))
+                print(f"Kompilacja zakończona sukcesem! Wynik: {output_file}")
+            else:
+                print("Błąd kompilacji: Parser nie zwrócił wyniku (błędy składniowe).")
+                sys.exit(1)
+                
+    except Exception as e:
+        print(f"Wystąpił błąd: {e}")
+        sys.exit(1)
+
+if __name__ == "__main__":
+    run()
