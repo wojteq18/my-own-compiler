@@ -1,22 +1,32 @@
 import sys
 from register_manager import reg_manager
-from compiler_utils import generate_number, get_addr, gen_multiply, get_divide, symbols_table, procedures_table
+from compiler_utils import (
+    generate_number, get_addr, gen_multiply, 
+    get_divide, symbols_table, procedures_table
+)
+
+initialized_vars = set()
 
 class Node:
     def generate(self, buffer):
         raise NotImplementedError("Subclasses must implement generate method")
-    
+
 class NumberNode(Node):
     def __init__(self, value):
         self.value = value
     def generate(self, buffer):
         generate_number(int(self.value), buffer)
-    
+
 class VariableNode(Node):
     def __init__(self, name):
         self.name = name
     def generate(self, buffer):
         info = symbols_table[self.name]
+        param_type = info.get('param_type', '')
+        
+        if 'O' in param_type and self.name not in initialized_vars:
+            sys.exit(f"Błąd semantyczny: Próba odczytu niezainicjalizowanego parametru 'O': {self.name}")
+            
         addr = info['addr']
         if info.get('is_param'):
             reg_ptr = reg_manager.get_register()
@@ -26,7 +36,7 @@ class VariableNode(Node):
             reg_manager.release_register()
         else:
             buffer.add_instr(f"LOAD {addr}")
-    
+
 class BinaryOperationNode(Node):
     def __init__(self, left, operator, right):
         self.left = left
@@ -56,6 +66,17 @@ class AssignmentNode(Node):
         self.expression = expression
     def generate(self, buffer):
         self.expression.generate(buffer)
+        
+        if isinstance(self.target, VariableNode):
+            info = symbols_table[self.target.name]
+            param_type = info.get('param_type', '')
+            
+            if 'I' in param_type:
+                sys.exit(f"Błąd semantyczny: Próba modyfikacji parametru 'I' (stała): {self.target.name}")
+            
+            if 'O' in param_type:
+                initialized_vars.add(self.target.name)
+
         if isinstance(self.target, VariableNode):
             info = symbols_table[self.target.name]
             if info.get('is_param'):
@@ -85,10 +106,20 @@ class AssignmentNode(Node):
 class ReadNode(Node):
     def __init__(self, target):
         self.target = target
+
     def generate(self, buffer):
         if isinstance(self.target, VariableNode):
             info = symbols_table[self.target.name]
+            param_type = info.get('param_type', '')
+            
+            if 'I' in param_type:
+                sys.exit(f"Błąd semantyczny: Próba zapisu (READ) do parametru 'I': {self.target.name.split('_')[-1]}")
+            
             buffer.add_instr("READ") 
+
+            if 'O' in param_type:
+                initialized_vars.add(self.target.name)
+
             if info.get('is_param'):
                 reg_val = reg_manager.get_register()
                 buffer.add_instr(f"SWP {reg_val}")
@@ -102,9 +133,11 @@ class ReadNode(Node):
                 reg_manager.release_register()
             else:
                 buffer.add_instr(f"STORE {info['addr']}") 
+
         elif isinstance(self.target, ArrayElementNode):
             reg_addr = reg_manager.get_register()
             self.target.generate_address(buffer, reg_addr)
+            
             buffer.add_instr("READ")
             buffer.add_instr(f"RSTORE {reg_addr}")
             reg_manager.release_register()
@@ -140,7 +173,6 @@ class ConditionNode(Node):
             buffer.add_instr(f"SUB {reg_left}")
             buffer.add_instr(f"JZERO LABEL_{label_false}")
         elif self.operator == '=':
-            label_ok = buffer.get_new_label()
             buffer.add_instr("RST a")
             buffer.add_instr(f"ADD {reg_left}")
             buffer.add_instr(f"SUB {reg_right}")
@@ -322,6 +354,9 @@ class ProcedureNode(Node):
         self.params = params  
         self.commands = commands
     def generate(self, buffer):
+        global initialized_vars
+        initialized_vars = set() 
+        
         buffer.set_label(f"PROC_{self.name}")
         ret_addr_cell = get_addr(f"__ret_addr_{self.name}")
         buffer.add_instr(f"STORE {ret_addr_cell}") 
@@ -340,13 +375,23 @@ class CallNode(Node):
     def generate(self, buffer):
         proc_info = procedures_table[self.name]
         for i, arg_node in enumerate(self.args):
-            param_cell_addr = proc_info['param_addrs'][i]
-            arg_info = symbols_table[arg_node.name]
+            target_param_type = proc_info['params'][i][1]
             
+            arg_info = symbols_table.get(arg_node.name)
+            source_param_type = arg_info.get('param_type', '') if arg_info else ''
+
+            
+            if 'I' in source_param_type and 'I' not in target_param_type:
+                sys.exit(f"Błąd semantyczny: Parametr 'I' {arg_node.name} nie może być przekazany do parametru modyfikowalnego.")
+
+            if 'O' in source_param_type and 'I' in target_param_type and arg_node.name not in initialized_vars:
+                sys.exit(f"Błąd semantyczny: Niezainicjalizowany parametr 'O' {arg_node.name} nie może być przekazany do 'I'.")
+
+            param_cell_addr = proc_info['param_addrs'][i]
             if arg_info.get('is_param'):
                 buffer.add_instr(f"LOAD {arg_info['addr']}")
             else:
-                if 'T' in proc_info['params'][i][1]:
+                if 'T' in target_param_type:
                     vba = arg_info['addr'] - arg_info['start']
                     generate_number(vba, buffer)
                 else:
